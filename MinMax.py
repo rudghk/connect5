@@ -1,6 +1,5 @@
 from copy import deepcopy
 from Board import *
-win_score = 100000
 
 class MinMax:
     def __init__(self) -> None:
@@ -11,7 +10,7 @@ class MinMax:
         if count > 5:   # 장목
             return 500
         if count == 5:
-            return win_score
+            return self.win_score
         if count < 5 and open == 0:
             return 0
         return count*100 + open*50  # 연속: 100점, 열림: 50점
@@ -55,7 +54,7 @@ class MinMax:
             possible_pos.remove(pos)
 
         # 흑돌인 경우 금수 위치 제거
-        if my_color == BLACK:
+        if my_color == 0:
             rm_pos = []
             for x, y in possible_pos:
                 board.put(x, y, my_color)
@@ -90,7 +89,7 @@ class MinMax:
                     break
             return score, pos_x, pos_y
         else:
-            score = win_score
+            score = self.win_score
             pos_x = None
             pos_y = None
             for x, y in possible_pos:
@@ -109,20 +108,22 @@ class MinMax:
                     break
             return score, pos_x, pos_y
 
-# depth = 3
-# board = Board()
-# board.board_status[7][7] = 0
-# # board.board_status[7][8] = 1
-# # board.board_status[6][9] = 
-# my_color = 1
-# my_turn = True
 
-# score, pos_x, pos_y = minmax(depth, -1, win_score, board, my_color, my_turn)
-# if pos_x == None and pos_y == None:
-#     pos_x = 7
-#     pos_y = 7
-# print("+++ board +++")
-# board.put(pos_x, pos_y, my_color)
-# board.draw()
-# print("============")
-# print(pos_x, pos_y)
+if __name__ == '__main__':
+    board = Board()
+    depth = 3
+    board.board_status[7][7] = 0
+    # board.board_status[7][8] = 1
+    # board.board_status[6][9] = 
+    my_color = 1
+    my_turn = True
+    ai = MinMax()
+    score, pos_x, pos_y = ai.minmax(depth, -1, ai.win_score, board, my_color, my_turn)
+    if pos_x == None and pos_y == None:
+        pos_x = 7
+        pos_y = 7
+    print("+++ board +++")
+    board.put(pos_x, pos_y, my_color)
+    board.draw()
+    print("============")
+    print(pos_x, pos_y)

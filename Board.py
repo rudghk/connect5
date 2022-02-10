@@ -1,3 +1,5 @@
+from MinMax import *
+
 BLACK = 0
 WHITE = 1
 
@@ -182,18 +184,21 @@ class Board:
         return False
 
 class Player:
-    def __init__(self) -> None:
-        self.color = None # 0(black), 1(white)
-        self.status = 0  #0(not ready), 1(ready)
-        self.id = None # nickname
-        self.human = None
-
-    def setInfo(self, color, id, is_human) -> None:
-        self.color = color
-        self.id = id
+    def __init__(self, color, id, is_human) -> None:
+        self.color = color # 0(black), 1(white)
+        self.id = id # nickname
         self.human = is_human
-
-    def setStatus(self, status) -> None:
-        self.status = status
-
+        if not is_human:
+            self.ai = MinMax()
+        else:
+            self.ai = None
     
+    def getAIPos(self, depth=3, board=None):
+        print("get ai pos")
+        if not self.human:
+            print("before minmax")
+            _, x, y = self.ai.minmax(depth, -1, self.ai.win_score, board, self.color, True)
+            if x == None and y == None:
+                x = 7
+                y = 7
+            return x, y
