@@ -106,6 +106,8 @@ class MyApp(QWidget, form_class):
 
     def play(self, cmd, turn, data): 
         if cmd == 2: # update 명령
+            if data == 0:
+                self.start = True   # game start
             if turn == 0:
                 if data != 0:
                     x = (data >> 4) & 0xF
@@ -113,13 +115,12 @@ class MyApp(QWidget, form_class):
                     print("recv" + str((x, y)))
                     self.updateEvent(x, y, self.other_color)
                 if not self.players[self.my_color].human:
-                    print("here")
                     x, y = self.players[self.my_color].getAIPos(3, self.board)
                     print("send" + str((x, y)))
                     self.putStoneEvent(x, y)
                 else:
                     self.event_loop.exec_()
-                    self.start = True
+                    
         if cmd == 4: # end 명령
             print("Game over")
             print(self.gomoku)
@@ -129,8 +130,8 @@ class MyApp(QWidget, form_class):
     
     def putStoneEvent(self, x, y):
         res = self.gomoku.put(x, y)
-        self.updateEvent(x, y, self.my_color)
         self.event_loop.exit()
+        self.updateEvent(x, y, self.my_color)
 
     def updateEvent(self, x, y, c):
         # PUT on board
@@ -147,8 +148,9 @@ class MyApp(QWidget, form_class):
         self.lTurnBoard.setText(self.players[self.board.cur_player].id+'이(가) 두는 중...')
         
     def drawStone(self, x, y):
-        pos_x = self.start + x*self.interval - int(self.circle_size/2)
-        pos_y = self.start + y*self.interval - int(self.circle_size/2)
+        pos_x = self.start + x*self.interval - int(self.circle_size/2) +29  # 29 보정(325-296)
+        pos_y = self.start + y*self.interval - int(self.circle_size/2) +29
+        print(pos_x, pos_y)
         color = self.board.board_status[x][y]
         pen = QPen(Qt.black, 1, Qt.SolidLine)
         brush = QBrush(Qt.black, Qt.SolidPattern)   # black
@@ -160,7 +162,7 @@ class MyApp(QWidget, form_class):
         # pos x, y 계산해서 putstoneEvent
         # print(e.pos())
         if not self.start:
-            pass
+            return
         if self.board.cur_player == self.my_color and self.players[self.my_color].human:
             cal_x = (e.pos().x()-35) // 45
             cal_y = (e.pos().y()-45) // 45
