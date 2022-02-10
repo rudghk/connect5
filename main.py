@@ -14,7 +14,7 @@ class MyApp(QWidget, form_class):
         super().__init__()
         self.ip = ip
         self.port = port
-        self.start = False
+        self.game_start = False
         self.board = Board()
         self.interval = 45
         self.start = 30
@@ -107,7 +107,7 @@ class MyApp(QWidget, form_class):
     def play(self, cmd, turn, data): 
         if cmd == 2: # update 명령
             if data == 0:
-                self.start = True   # game start
+                self.game_start = True   # game start
             if turn == 0:
                 if data != 0:
                     x = (data >> 4) & 0xF
@@ -161,7 +161,7 @@ class MyApp(QWidget, form_class):
     def mousePressEvent(self, e):
         # pos x, y 계산해서 putstoneEvent
         # print(e.pos())
-        if not self.start:
+        if not self.game_start:
             return
         if self.board.cur_player == self.my_color and self.players[self.my_color].human:
             cal_x = (e.pos().x()-35) // 45
