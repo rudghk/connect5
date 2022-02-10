@@ -46,8 +46,6 @@ class MyApp(QWidget, form_class):
         else:
             self.players.append(player2)
             self.players.append(player1)
-        print(self.players[0].id, self.players[1].id)
-        print(self.my_color)
         print(self.players[self.my_color].id)
 
     def initUI(self):
@@ -113,7 +111,7 @@ class MyApp(QWidget, form_class):
                     x = (data >> 4) & 0xF
                     y = data & 0xF
                     print("recv" + str((x, y)))
-                    self.updateEvent(x, y, self.other_color)
+                    self.updateEvent(x-1, y-1, self.other_color)
                 if not self.players[self.my_color].human:
                     x, y = self.players[self.my_color].getAIPos(3, self.board)
                     print("send" + str((x, y)))
@@ -129,7 +127,7 @@ class MyApp(QWidget, form_class):
             self.gameoverEvent(turn, data)
     
     def putStoneEvent(self, x, y):
-        res = self.gomoku.put(x, y)
+        res = self.gomoku.put(x+1, y+1)
         self.event_loop.exit()
         self.updateEvent(x, y, self.my_color)
 
@@ -148,9 +146,9 @@ class MyApp(QWidget, form_class):
         self.lTurnBoard.setText(self.players[self.board.cur_player].id+'이(가) 두는 중...')
         
     def drawStone(self, x, y):
-        pos_x = self.start + x*self.interval - int(self.circle_size/2) +29  # 29 보정(325-296)
-        pos_y = self.start + y*self.interval - int(self.circle_size/2) +29
-        print(pos_x, pos_y)
+        pos_x = self.start + x*self.interval - int(self.circle_size/2) # +29  # 29 보정(325-296)
+        pos_y = self.start + y*self.interval - int(self.circle_size/2) # +29
+        # print(pos_x, pos_y)
         color = self.board.board_status[x][y]
         pen = QPen(Qt.black, 1, Qt.SolidLine)
         brush = QBrush(Qt.black, Qt.SolidPattern)   # black
@@ -179,6 +177,11 @@ class MyApp(QWidget, form_class):
             err_str = '시간 초과'
         else:
             err_str = '오목 완성'
+            x = (reason >> 4) & 0xF
+            y = reason & 0xF
+            print("recv" + str((x, y)))
+            if result != 1:     # 상대가 오목을 완성한 경우, 최종 수 표현
+                self.updateEvent(x-1, y-1, self.other_color)
         result_str = 'Win' if result == 1 else 'Lose'
         color_str = '흑' if self.my_color == 0 else '백'
         msg = self.players[self.my_color].id+'['+color_str+'] '+result_str

@@ -194,11 +194,13 @@ class Player:
             self.ai = None
     
     def getAIPos(self, depth=3, board=None):
-        print("get ai pos")
         if not self.human:
-            print("before minmax")
-            _, x, y = self.ai.minmax(depth, -1, self.ai.win_score, board, self.color, True)
+            print("search win pos")
+            x, y = self.ai.searchWinPos(board, self.color)
             if x == None and y == None:
-                x = 7
-                y = 7
+                print("before minmax")
+                _, x, y = self.ai.minmax(depth, -1, self.ai.win_score, board, self.color, True)
+                if x == None and y == None:
+                    x = 7
+                    y = 7
             return x, y

@@ -33,6 +33,8 @@ class Gomoku(QThread):
         while not self.power:
             msg = self.socket.recv(Gomoku.BUF_SIZE)
             if msg != b'':
+                print("== msg ==")
+                print(msg)
                 self.server_msg.emit(msg[0], msg[1], msg[2])
 
     def stop(self):
@@ -103,7 +105,6 @@ class Gomoku(QThread):
         try:
             x_byte = x << 4
             xy_byte = x_byte + y
-            print("xy_byte " + (str(xy_byte)) +' ' + str(bin(xy_byte)))
             ret = self.send(3, 0, xy_byte)
             if not ret:
                 raise Exception("send error")
