@@ -20,6 +20,8 @@ class MyApp(QWidget, form_class):
         self.start = 30
         self.end = self.start+self.interval*(self.board.size-1)
         self.circle_size = 40
+        self.event_loop = QEventLoop()
+        self.gomoku = None
 
         # # timer
         # self.timer = QTimer(self)
@@ -27,26 +29,6 @@ class MyApp(QWidget, form_class):
         # self.timer.timeout.connect(self.timeout)
 
         self.initUI()
-    
-    def connectServer(self):
-        self.gomoku = Gomoku(self.ip, self.port, True)    # 나중에 False로@@
-        color = self.gomoku.connect()
-        if color == -1:
-            exit(0)
-        self.my_color = color
-        self.other_color = (color+1) % 2
-        
-    def createPlayers(self, id1, is_human1, id2, is_human2):
-        self.players = []       # 흑, 백 순서로 insert
-        player1 = Player(self.my_color, id1, is_human1)
-        player2 = Player(self.other_color, id2, is_human2)
-        if self.my_color == 0:
-            self.players.append(player1)
-            self.players.append(player2)
-        else:
-            self.players.append(player2)
-            self.players.append(player1)
-        print(self.players[self.my_color].id)
 
     def initUI(self):
         self.setupUi(self)
@@ -54,55 +36,79 @@ class MyApp(QWidget, form_class):
         self.lcdTimer.display(15)
         self.pbExit.clicked.connect(self.exitEvent)
         self.pbReady.clicked.connect(self.readyEvent)
-        self.rbHAI.clicked.connect(self.selectMode)
-        self.rbHH.clicked.connect(self.selectMode)
-        self.rbAIAI.clicked.connect(self.selectMode)
  
         self.scene = QGraphicsScene()        
         self.gvGameBoard.setScene(self.scene)
         pix = QPixmap('board_img.png')
         pix = pix.scaledToWidth(690)
         self.scene.addPixmap(pix)
-        
-        self.event_loop = QEventLoop()
-        self.connectServer()
-        self.gomoku.server_msg.connect(self.play)
-        self.gomoku.start()
-    
+           
         self.setWindowTitle('Gomoku')
         self.show()
     
-    def selectMode(self):
-        if self.rbHAI.isChecked():
-            self.createPlayers("Human", True, "AI", False)
-        elif self.rbHH.isChecked():
-            self.createPlayers("Human1", True, "Human2", True)
-        elif self.rbAIAI.isChecked():
-            self.createPlayers("AI1", False, "AI2", False)
-
     def timeout(self):
         self.lcdTimer.display(self.lcdTimer.value()-1)
 
     def exitEvent(self):
-        self.gomoku.__del__()
-        print("게임 강제 종료")
+        if self.gomoku != None:
+            self.gomoku.stop()
+            self.gomoku.__del__()
+        print("게임 종료")
         sys.exit(0)
 
     def readyEvent(self):
-        # 모드 선택 먼저 되어 있어야함
-        if not (self.rbHAI.isChecked() or self.rbHH.isChecked() or self.rbAIAI.isChecked()):
-            return
+        type = self.cbType.currentText()
+        type = type.split()
+        if self.rbSingle.isChecked():
+            self.game_mode = 1 # Single
+        else:
+            self.game_mode = 2 # Online
+
         status_list = ['Ready', 'Not Ready']
         status = self.pbReady.text()
         if status == status_list[0]:  
-            self.gomoku.ready()       # 준비
-            self.pbReady.setText(status_list[1])
-            print('my color ' + str(self.my_color))
+            if self.game_mode == 1:
+                self.createPlayers(0, type[0]=='Human', 1, type[-1]=='Human')
+                self.singlePlay()
+            elif self.game_mode == 2:
+                if self.gomoku == None:
+                    color1 = self.connectServer()
+                    self.gomoku.server_msg.connect(self.onlinePlay)
+                    self.gomoku.start()
+                else:
+                    color1 = self.my_color
+                self.createPlayers(color1, type[0]=='Human', (color1+1)%2, type[0]=='Human')
+                self.gomoku.ready()       # 준비
+                self.pbReady.setText(status_list[1])
+                print('my color ' + str(self.my_color))
         else:
-            self.gomoku.ready(True)   # 준비 취소
+            if self.game_mode == 2:
+                self.gomoku.ready(True)   # 준비 취소
             self.pbReady.setText(status_list[0])
+        
+    def createPlayers(self, color1, is_human1, color2, is_human2):
+        self.players = []       # 흑, 백 순서로 insert
+        player1 = Player(color1, is_human1)
+        player2 = Player(color2, is_human2)
+        self.my_color = color1
+        self.other_color = color2
+        if self.my_color == 0:
+            self.players.append(player1)
+            self.players.append(player2)
+        else:
+            self.players.append(player2)
+            self.players.append(player1)
+        print("Create plyaers "+str(self.my_color))
+        print(self.players[self.my_color].human)
 
-    def play(self, cmd, turn, data): 
+    def connectServer(self):
+        self.gomoku = Gomoku(self.ip, self.port, True)    # 나중에 False로@@
+        color = self.gomoku.connect()
+        if color == -1:
+            exit(0)
+        return color
+
+    def onlinePlay(self, cmd, turn, data): 
         if cmd == 2: # update 명령
             if data == 0:
                 self.game_start = True   # game start
@@ -117,18 +123,19 @@ class MyApp(QWidget, form_class):
                     print("send" + str((x, y)))
                     self.putStoneEvent(x, y)
                 else:
-                    self.event_loop.exec_()
-                    
+                    self.event_loop.exec_()  
         if cmd == 4: # end 명령
             print("Game over")
             print(self.gomoku)
-            self.gomoku.stop()
-            self.gomoku.__del__()
             self.gameoverEvent(turn, data)
     
+    def singlePlay(self):
+        print("k")
+
     def putStoneEvent(self, x, y):
-        res = self.gomoku.put(x+1, y+1)
         self.event_loop.exit()
+        if self.game_mode == 2:
+            res = self.gomoku.put(x+1, y+1)
         self.updateEvent(x, y, self.my_color)
 
     def updateEvent(self, x, y, c):
@@ -137,13 +144,13 @@ class MyApp(QWidget, form_class):
         # Game board
         self.drawStone(x, y)
         # History board
-        last_player = self.players[c]
-        last_color_str = '{0}'.format('백' if last_player.color else '흑')
-        self.tbHistoryBoard.append(last_player.id+'['+last_color_str+'] - ('+str(x)+', '+str(y)+')')
+        last_color_str = '{0}'.format('백' if c else '흑')
+        self.tbHistoryBoard.append('['+last_color_str+'] - ('+str(x)+', '+str(y)+')')
         # Timer
         self.lcdTimer.display(15)
         # Turn borad
-        self.lTurnBoard.setText(self.players[self.board.cur_player].id+'이(가) 두는 중...')
+        cur_color_str = '{0}'.format('백' if (c+1)%2 else '흑')
+        self.lTurnBoard.setText('['+cur_color_str+']이 두는 중...')
         
     def drawStone(self, x, y):
         pos_x = self.start + x*self.interval - int(self.circle_size/2) # +29  # 29 보정(325-296)
@@ -181,17 +188,20 @@ class MyApp(QWidget, form_class):
             y = reason & 0xF
             print("recv" + str((x, y)))
             if result != 1:     # 상대가 오목을 완성한 경우, 최종 수 표현
-                self.updateEvent(x-1, y-1, self.other_color)
+                if self.game_mode == 2:
+                    x = x-1
+                    y = y-1
+                self.updateEvent(x, y, self.other_color)
         result_str = 'Win' if result == 1 else 'Lose'
         color_str = '흑' if self.my_color == 0 else '백'
-        msg = self.players[self.my_color].id+'['+color_str+'] '+result_str
+        msg = '['+color_str+'] '+result_str
         self.tbHistoryBoard.append(err_str)
         self.tbHistoryBoard.append(msg)
         reply = QMessageBox.information(self, 'Result', msg, QMessageBox.Ok)
         if reply == QMessageBox.Ok:
-            print("Game over")
-            sys.exit(0)
-    
+            print("Msg Game over")
+            self.exitEvent()
+
 if __name__ == '__main__':
     import signal
     import sys

@@ -184,9 +184,8 @@ class Board:
         return False
 
 class Player:
-    def __init__(self, color, id, is_human) -> None:
+    def __init__(self, color, is_human) -> None:
         self.color = color # 0(black), 1(white)
-        self.id = id # nickname
         self.human = is_human
         if not is_human:
             self.ai = MinMax()
