@@ -144,23 +144,23 @@ class Board:
         
         return False
     
-
-    # 0(게임 끝x), 1(패/금수), 2(승/오목), 3(승/장목)
-    def gameover(self, x, y, c) -> int:
+    # 흑 기준 승/패 판단
+    def gameover(self, x, y, c):
         relations = self.getAllConnectedRelation(x, y, c)
         # (흑) 금수 
         if c == BLACK:
             print("금수 체크")
             if self.isForbidden(relations):
-                print("금수")
-                return 1   # 패/금수
+                return 0, 0     # 흑 패-금수
         # 오목 완성
         for count, _, _, _ in relations:
-            if count == 5:
-                return 2 # 승/오목
-            elif count > 5:
-                return 3    # 승/장목
-        return False
+            if count >= 5:
+                xy = (x<<4) | y
+                if c == BLACK:
+                    return 1, xy    # 흑 승-오목/장목 완성(흑)
+                else:
+                    return 0, xy    # 흑 패-오목/장목 완성(백)
+        return -1, -1
 
     # for minmax
     def getColorPos(self, color):  # color가 -1(empty), 0(black), 1(white)

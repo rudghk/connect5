@@ -147,23 +147,3 @@ class MinMax:
             if self.getScore(new_board, my_color) >= self.win_score:
                 return x, y
         return None, None
-
-
-# if __name__ == '__main__':
-#     board = Board()
-#     depth = 3
-#     board.board_status[7][7] = 0
-#     # board.board_status[7][8] = 1
-#     # board.board_status[6][9] = 
-#     my_color = 1
-#     my_turn = True
-#     ai = MinMax()
-#     score, pos_x, pos_y = ai.minmax(depth, -1, ai.win_score, board, my_color, my_turn)
-#     if pos_x == None and pos_y == None:
-#         pos_x = 7
-#         pos_y = 7
-#     print("+++ board +++")
-#     board.put(pos_x, pos_y, my_color)
-#     board.draw()
-#     print("============")
-#     print(pos_x, pos_y)
