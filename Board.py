@@ -1,8 +1,7 @@
-from MinMax import *
+from MinMax import MinMax
 
 BLACK = 0
 WHITE = 1
-
 
 class Board:
     def __init__(self) -> None:
@@ -60,12 +59,7 @@ class Board:
                 start_y = tmp_y - dir_y
         # 양쪽 open 상태
         open = 0
-        dir_x1, dir_y1 = self.direction(dir_type)
-        dir_x2, dir_y2 = self.direction(4+dir_type)
-        left_x = start_x + dir_x1
-        left_y = start_y + dir_y1
-        right_x = start_x + count*dir_x2
-        right_y = start_y + count*dir_y2
+        left_x, left_y, right_x, right_y = self.getLeftRightxy(count, start_x, start_y, dir_type)
         # print(dir_type, (start_x, start_y), (left_x, left_y), (right_x, right_y)) @@
         if not self.isOutOfRange(left_x, left_y) and self.board_status[left_x][left_y] == -1:
             open += 1
@@ -73,6 +67,14 @@ class Board:
             open += 1
         return count, start_x, start_y, open
 
+    def getLeftRightxy(self, count, start_x, start_y, dir_type):
+        dir_x1, dir_y1 = self.direction(dir_type)
+        dir_x2, dir_y2 = self.direction(4+dir_type)
+        left_x = start_x + dir_x1
+        left_y = start_y + dir_y1
+        right_x = start_x + count*dir_x2
+        right_y = start_y + count*dir_y2
+        return left_x, left_y, right_x, right_y
 
     def getAllConnectedRelation(self, x, y, c):
         relations = []
@@ -197,9 +199,12 @@ class Player:
             print("search win pos")
             x, y = self.ai.searchWinPos(board, self.color)
             if x == None and y == None:
-                print("before minmax")
-                _, x, y = self.ai.minmax(depth, -1, self.ai.win_score, board, self.color, True)
+                print("search defence pos")
+                x, y = self.ai.searchDefencePos(board, self.color)
                 if x == None and y == None:
-                    x = 7
-                    y = 7
+                    print("before minmax")
+                    _, x, y = self.ai.minmax(depth, -1, self.ai.win_score, board, self.color, True)
+                    if x == None and y == None:
+                        x = 7
+                        y = 7
             return x, y

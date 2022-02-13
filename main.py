@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QApplication, QWidget, QGraphicsScene, QMessageBox
 from PyQt5.QtGui import QPen, QBrush, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QEventLoop
 from PyQt5 import uic
-from MinMax import *
 from Worker import Worker
 from gomoku_lib import Gomoku
 
