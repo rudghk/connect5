@@ -1,4 +1,5 @@
 from copy import deepcopy
+from math import trunc
 
 class MinMax:
     def __init__(self) -> None:
@@ -55,14 +56,12 @@ class MinMax:
             score = self.getScore(board, cur_turn_color)
             return score, None, None    # score, x, y
         
-        # 주변에 stone이 있는 empty 좌표
-        possible_pos = board.getColorPos(-1)  # empty 좌표들
-        rm_pos = []
-        for x, y in possible_pos:
-            if not board.hasNearStone(x, y):
-                rm_pos.append((x, y))
-        for pos in rm_pos:
-            possible_pos.remove(pos)
+        # 주변에 내 돌이 있는 empty 좌표
+        candidate_pos = board.getColorPos(-1)  # empty 좌표들
+        possible_pos = []
+        for x, y in candidate_pos:
+            if board.hasNearStone(x, y, cur_turn_color):
+                possible_pos.append((x, y))
 
         # 흑돌인 경우 금수 위치 제거
         if cur_turn_color == 0:
@@ -121,14 +120,12 @@ class MinMax:
             return score, pos_x, pos_y
 
     def searchWinPos(self, board, my_color):
-        # 주변에 stone이 있는 empty 좌표
-        possible_pos = board.getColorPos(-1)  # empty 좌표들
-        rm_pos = []
-        for x, y in possible_pos:
-            if not board.hasNearStone(x, y):
-                rm_pos.append((x, y))
-        for pos in rm_pos:
-            possible_pos.remove(pos)
+       # 주변에 내 돌이 있는 empty 좌표
+        candidate_pos = board.getColorPos(-1)  # empty 좌표들
+        possible_pos = []
+        for x, y in candidate_pos:
+            if board.hasNearStone(x, y, my_color):
+                possible_pos.append((x, y))
 
         # 흑돌인 경우 금수 위치 제거
         if my_color == 0:
@@ -143,10 +140,11 @@ class MinMax:
                 possible_pos.remove(pos)
 
         for x, y in possible_pos:
-            new_board = deepcopy(board)
-            new_board.put(x, y, my_color)
-            if self.getScore(new_board, my_color) >= self.win_score:
-                return x, y
+            board.put(x, y, my_color)
+            score = self.getScore(board, my_color)
+            board.rollback(x, y, my_color)
+            if score >= self.win_score:
+                return x, y 
         return None, None
 
     def calDefenceScore(self, board, x, y, my_color, score):
@@ -172,10 +170,12 @@ class MinMax:
                 # _oooox (_:open, x: o와 다른 색)
                 if count == 4 and open == 1:
                     left_x, left_y, right_x, right_y = board.getLeftRightxy(count, start_x, start_y, dir_type)
-                    if board.board_status[left_x][left_y] == -1:
-                        return left_x, left_y
-                    else:
-                        return right_x, right_y
+                    print(left_x, left_y, right_x, right_y)
+                    if not board.isOutOfRange(left_x, left_y):
+                        if board.board_status[left_x][left_y] == my_color:
+                            return right_x, right_y
+                        else:
+                            return left_x, left_y
                 elif count == 3 and open == 2:
                     c3open2.append((pos_idx, dir_type))
                 elif count == 2 and open == 2:
@@ -190,17 +190,17 @@ class MinMax:
             count, start_x, start_y, open = all_relations[pos_idx][dir_type]
             left_x, left_y, right_x, right_y = board.getLeftRightxy(count, start_x, start_y, dir_type)
             tmp_x1, tmp_y1, tmp_x2, tmp_y2 = board.getLeftRightxy(count+2, left_x, left_y, dir_type)
-            if board.board_status[tmp_x1][tmp_y1] == other_color:
+            if not board.isOutOfRange(tmp_x1, tmp_y1) and board.board_status[tmp_x1][tmp_y1] == other_color:
                 tmp_x, tmp_y, _, _ = board.getLeftRightxy(1, tmp_x1, tmp_y1, dir_type)
-                if board.board_status[tmp_x][tmp_y] != my_color:
+                if not board.isOutOfRange(tmp_x, tmp_y) and board.board_status[tmp_x][tmp_y] != my_color:
                     tmp_score = self.calDefenceScore(board, left_x, left_y, my_color, score)
                     if tmp_score > score:
                         score = tmp_score
                         pos_x = left_x
                         pos_y = left_y
-            elif board.board_status[tmp_x2][tmp_y2] == other_color:
+            elif not board.isOutOfRange(tmp_x2, tmp_y2) and board.board_status[tmp_x2][tmp_y2] == other_color:
                 _, _, tmp_x, tmp_y = board.getLeftRightxy(1, tmp_x2, tmp_y2, dir_type)
-                if board.board_status[tmp_x][tmp_y] != my_color:
+                if not board.isOutOfRange(tmp_x, tmp_y) and board.board_status[tmp_x][tmp_y] != my_color:
                     tmp_score = self.calDefenceScore(board, right_x, right_y, my_color, score)
                     if tmp_score > score:
                         score = tmp_score

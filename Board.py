@@ -175,13 +175,13 @@ class Board:
 
     # for minmax
     # 8 방향 내에 stone이 있는지 확인
-    def hasNearStone(self, x, y):
+    def hasNearStone(self, x, y, color):
         for idx in range(8):
             dir_x, dir_y = self.direction(idx)
             pos_x = x + dir_x
             pos_y = y + dir_y
             if not self.isOutOfRange(pos_x, pos_y):
-                if self.board_status[pos_x][pos_y] != -1:
+                if self.board_status[pos_x][pos_y] == color:
                     return True
         return False
 
@@ -205,6 +205,8 @@ class Player:
                     print("before minmax")
                     _, x, y = self.ai.minmax(depth, -1, self.ai.win_score, board, self.color, True)
                     if x == None and y == None:
-                        x = 7
-                        y = 7
+                        if board.board_status[7][7] == -1:
+                            return 7, 7
+                        else:
+                            return 6, 7
             return x, y
