@@ -115,35 +115,12 @@ class Board:
     def isForbidden(self, relations) -> bool:
         # Gett open3, open4 dir_type
         open3, open4 = self.getOpen_3_4(relations)
-
         # 3x3
         if len(open3) > 1:
             return True
-        if len(open3) == 1:
-            dir_type = open3[0]
-            count, start_x, start_y, _ = relations[dir_type]
-            c = self.board_status[start_x][start_y]
-            for i in range(count):
-                dir_x, dir_y = self.direction(4+dir_type)
-                tmp_relations = self.getAllConnectedRelation(start_x+i*dir_x, start_y+i*dir_y, c)
-                tmp_open3, _ = self.getOpen_3_4(tmp_relations)
-                if len(tmp_open3) > 1:
-                    return True
-
         # 4x4
         if len(open4) > 1:
             return True
-        if len(open4) == 1:
-            dir_type = open4[0]
-            count, start_x, start_y, _ = relations[dir_type]
-            c = self.board_status[start_x][start_y]
-            for i in range(count):
-                dir_x, dir_y = self.direction(4+dir_type)
-                tmp_relations = self.getAllConnectedRelation(start_x+i*dir_x, start_y+i*dir_y, c)
-                _, tmp_open4 = self.getOpen_3_4(tmp_relations)
-                if len(tmp_open4) > 1:
-                    return True
-        
         return False
     
     # 흑 기준 승/패 판단
