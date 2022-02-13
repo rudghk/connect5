@@ -1,6 +1,6 @@
 from Board import *
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QGraphicsScene, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QGraphicsScene, QMessageBox, QGraphicsEllipseItem
 from PyQt5.QtGui import QPen, QBrush, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QEventLoop
 from PyQt5 import uic
@@ -9,7 +9,7 @@ from gomoku_lib import Gomoku
 
 form_class = uic.loadUiType('GameUI.ui')[0]
 
-IP = 'localhost'
+IP =  'localhost'  # '101.101.209.9'
 PORT = 1234
 DEPTH = 3
 
@@ -46,6 +46,9 @@ class MyApp(QWidget, form_class):
         pix = QPixmap('board_img.png')
         pix = pix.scaledToWidth(690)
         self.scene.addPixmap(pix)
+        self.pointer = QGraphicsEllipseItem(0,0, self.circle_size, self.circle_size)        # 마지막 수 표시
+        self.pointer.setPen(QPen(Qt.transparent))
+        self.scene.addItem(self.pointer)
            
         self.setWindowTitle('Gomoku')
         self.show()
@@ -227,6 +230,8 @@ class MyApp(QWidget, form_class):
         if color == 1:    # white
             brush = QBrush(Qt.white, Qt.SolidPattern)
         self.scene.addEllipse(pos_x, pos_y, self.circle_size, self.circle_size, pen, brush)
+        self.pointer.setPen(QPen(Qt.red, 5))
+        self.pointer.setPos(pos_x, pos_y)
     
     def gameoverEvent(self, result, reason):
         self.timer.stop()
