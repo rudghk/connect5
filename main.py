@@ -8,6 +8,9 @@ from Worker import Worker
 from gomoku_lib import Gomoku
 
 form_class = uic.loadUiType('GameUI.ui')[0]
+
+IP = 'localhost'
+PORT = 1234
 DEPTH = 3
 
 class MyApp(QWidget, form_class):
@@ -251,16 +254,7 @@ class MyApp(QWidget, form_class):
             self.exitEvent()
 
 if __name__ == '__main__':
-    import signal
-    import sys
-
-    def handler(signal, frame):
-        print("\nBye bye~")
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, handler)
-
     app = QApplication(sys.argv)
-    ex = MyApp('localhost', 1234)
+    ex = MyApp(IP, PORT)
 
     sys.exit(app.exec_())
