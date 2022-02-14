@@ -170,7 +170,6 @@ class MinMax:
                 # _oooox (_:open, x: o와 다른 색)
                 if count == 4 and open == 1:
                     left_x, left_y, right_x, right_y = board.getLeftRightxy(count, start_x, start_y, dir_type)
-                    print(left_x, left_y, right_x, right_y)
                     if not board.isOutOfRange(left_x, left_y):
                         if board.board_status[left_x][left_y] == my_color:
                             return right_x, right_y

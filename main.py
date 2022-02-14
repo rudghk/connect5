@@ -37,7 +37,7 @@ class MyApp(QWidget, form_class):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.timeout)
 
-        self.lcdTimer.display(18)
+        self.lcdTimer.display(15)
         self.pbExit.clicked.connect(self.exitEvent)
         self.pbReady.clicked.connect(self.readyEvent)
  
@@ -155,12 +155,13 @@ class MyApp(QWidget, form_class):
                 self.game_start = True   # game start
                 self.pbReady.setText('Playing...')
                 self.timer.start(1000)
-            if turn == 0:
-                if data != 0:
-                    x = ((data >> 4) & 0xF) -1
-                    y = (data & 0xF) -1
-                    print("recv" + str((x, y)))
-                    self.updateEvent(x, y, self.other_color)
+            else:
+                update_color = self.other_color if turn == 0 else self.my_color
+                x = ((data >> 4) & 0xF) -1
+                y = (data & 0xF) -1
+                print("recv" + str((x, y)))
+                self.updateEvent(x, y, update_color)
+            if turn == 0:  
                 if not self.players[self.my_color].human:
                     worker = Worker(self.players[self.my_color], DEPTH, self.board)
                     worker.pos.connect(self.workerGetAIPos)
@@ -172,7 +173,6 @@ class MyApp(QWidget, form_class):
                 self.xy = (-1, -1)  # 초기화
         if cmd == 4: # end 명령
             print("Game over")
-            print(self.gomoku)
             self.gameoverEvent(turn, data)
 
     def singlePlay(self):
@@ -186,7 +186,7 @@ class MyApp(QWidget, form_class):
             origin = self.board.board_status[self.xy[0]][self.xy[1]]
             if not self.players[turn].human:
                 worker.stop()   # worker 종료
-            self.putStoneEvent(self.xy[0], self.xy[1], turn)
+            self.updateEvent(self.xy[0], self.xy[1], turn)
             # 흑 기준으로 승패 결과 반환
             # result : -1(게임 끝x,)1(흑 승), 2(흑 패)
             if origin != -1:    # 기존 돌이 있는 위치에 수를 놓은 경우
@@ -202,9 +202,7 @@ class MyApp(QWidget, form_class):
                     self.gameoverEvent(result, reason)
 
     def putStoneEvent(self, x, y, c):
-        if self.game_mode == 2:
-            res = self.gomoku.put(x+1, y+1)
-        self.updateEvent(x, y, c)
+        res = self.gomoku.put(x+1, y+1)
 
     def updateEvent(self, x, y, c):
         # PUT on board
@@ -215,7 +213,7 @@ class MyApp(QWidget, form_class):
         last_color_str = '{0}'.format('백' if c else '흑')
         self.tbHistoryBoard.append('['+last_color_str+'] - ('+str(x)+', '+str(y)+')')
         # Timer
-        self.lcdTimer.display(18)       # 15+3(서버 딜레이 고려)
+        self.lcdTimer.display(15)      
         # Turn borad
         cur_color_str = '{0}'.format('백' if (c+1)%2 else '흑')
         self.lTurnBoard.setText('['+cur_color_str+']이 두는 중...')
@@ -242,12 +240,12 @@ class MyApp(QWidget, form_class):
             err_str = '시간 초과'
         else:
             err_str = '오목 완성'
-            if result != 1:     # 상대가 오목을 완성한 경우, 최종 수 표현
-                if self.game_mode == 2:
-                    x = ((reason >> 4) & 0xF) -1
-                    y = (reason & 0xF) -1
-                    print("recv" + str((x, y)))
-                    self.updateEvent(x, y, self.other_color)
+            if self.game_mode == 2:
+                x = ((reason >> 4) & 0xF) -1
+                y = (reason & 0xF) -1
+                print("recv" + str((x, y)))
+                update_color = self.my_color if result == 1 else self.other_color
+                self.updateEvent(x, y, update_color)                  
         result_str = 'Win' if result == 1 else 'Lose'
         color_str = '흑' if self.my_color == 0 else '백'
         msg = '['+color_str+'] '+result_str
