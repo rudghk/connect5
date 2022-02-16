@@ -238,6 +238,8 @@ class MyApp(QWidget, form_class):
             err_str = '오류'
         elif reason == 1:
             err_str = '시간 초과'
+        elif reason == 2:
+            err_str = '돌을 둘 수 없음'
         else:
             err_str = '오목 완성'
             if self.game_mode == 2:
