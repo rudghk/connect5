@@ -9,7 +9,7 @@ from gomoku_lib import Gomoku
 
 form_class = uic.loadUiType('GameUI.ui')[0]
 
-IP =  'localhost'  # '101.101.209.9'
+IP = 'localhost' # '101.101.209.9'
 PORT = 1234
 DEPTH = 3
 

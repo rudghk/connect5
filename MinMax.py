@@ -1,5 +1,4 @@
 from copy import deepcopy
-from math import trunc
 
 class MinMax:
     def __init__(self) -> None:
